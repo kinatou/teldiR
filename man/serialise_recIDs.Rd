@@ -4,10 +4,10 @@
 \alias{serialise_recIDs}
 \title{Ch}
 \usage{
-serialise_recIDs(DTname = NA, DTlocation, dirNM = NA)
+serialise_recIDs(DTname = NA, DTlocation = "NONE", dirNM = NA)
 }
 \arguments{
-\item{DTname}{Charact}
+\item{DTname}{Cha ract}
 }
 \description{
 N.B. Th

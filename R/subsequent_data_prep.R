@@ -69,6 +69,66 @@ repl_streetAbbrevs <- function(DTname="tld", vCol, Regex_allowance="\\s?") {
 }
 
 
+#' Ch
+#'
+#' N.B. Th
+#'
+#' @import parallel
+#' @importFrom stringr str_sub
+#' @param DTname Cha ract
+#' @export
+serialise_recIDs <- function(DTname=NA, DTlocation="NONE", dirNM=NA) {
+  # prints notification messages corresponding to chosen operation
+  if (sum(is.na(DTname), is.na(dirNM)) %in% c(0,2)) { 
+    print("Exactly ONE of the following arguments should be defined: `DTname` or `dirNM`")
+  } else if (!is.na(DTname)) { # I: operates on object in R environment
+    #extracts directory year and location for creation of record IDs
+    dirYR <- get(DTname) %>% .[1, "DirName"] %>% gsub("^.*_(?=1[89])", "", ., perl = T) %>% 
+      str_sub(2, 4) 
+    
+    DTlocation %>% { if (. == "ALL") 0 
+      else if (. == "LDN") 1
+      else if (. == "GLA") 2 
+      else if (. == "MAN") 3 #adds a leading zero if needed
+      else 77                } %>% sprintf("%02d", .) -> dirCDE
+    
+    #creates unique ID column { (YYYY Year) (LL Location Code) (IIIIIII ID) }
+    get(DTname) %>% .[, ID := as.numeric(paste0(dirYR, dirCDE, sprintf("%07d", .I)))]
+    print( summary( get(DTname)[, "ID"])) #confirmation of correct attribution of IDs
+    
+    # assign(DTname, DT_x, envir = parent.frame())
+  } else if (!is.na(dirNM)) { # II: operates on file stored as .csv/.xlsx
+    readin_adrDT(dirNM, "tld") #imports chosen telephone directory
+    tld <<- tld #exports the table of records as global variable in R env.
+    
+    #extracts directory year and location for creation of record IDs
+    dirYR <- tld[1, "DirName"] %>% gsub("^.*_(?=1[89])", "", ., perl = T) %>% 
+      str_sub(2, 4)
+    #derives component of record ID to use based on `dirNM`
+    dirNM %>% gsub("^.*[\\_\\.](?=[A-Z]{3})", "", ., perl = T) %>%
+      #creates code based on directory location
+      str_sub(1, 3) %>% { if (. == "ALL") 0 
+        else if (. == "LDN") 1
+        else if (. == "GLA") 2 
+        else if (. == "MAN") 3 #adds a leading zero if needed
+        else 77                } %>% sprintf("%02d", .) -> dirCDE
+    
+    #creates unique ID column { (YYYY Year) (LL Location Code) (IIIIIII ID) }
+    tld[, ID := as.numeric(paste0(dirYR, dirCDE, sprintf("%07d", .I)))]
+    
+    #re-exports data table; keeps same file name as the original file
+    dirNM %>% gsub("^.*\\.(?=[0-9]\\_[A-Z]{3})", "", ., perl = T) %>%
+      gsub("(?<=[A-Za-z]{2})\\.[0-9]{6}\\_[0-9]{4}(\\.xlsx|\\.csv)?$", "", ., perl = T) -> yx
+      
+    print(yx)
+    export_fullDT("tld", xpNAME=yx)
+    
+    print( summary(tld$ID)) #confirmation of correct attribution of IDs
+  }
+}
+
+
+
 #' Checks and Corrects List of Surnames
 #'
 #' N.B. This currently works with `%do%` in the package but not with `%dopar%` (which only works

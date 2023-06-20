@@ -4,7 +4,7 @@
 \alias{prep_pgDT}
 \title{Prepares Table to Hold Information and Metadata from Single Text Files}
 \usage{
-prep_pgDT(DTname = "pgAPH", start_vCol = 3, end_vCol, fl)
+prep_pgDT(DTname = "pgAPH", start_vCol = 3, end_vCol = 4, fl)
 }
 \arguments{
 \item{DTname}{Character. Name of the R object (a table) on which the operation is to be run.
@@ -15,7 +15,7 @@ be created? The default value is \verb{=3}, meaning \code{'V3'}, since by defaul
 have been initialised at the point of importing information from a text file using \code{readin_PG()}.}
 
 \item{end_vCol}{Numeric. Similar to \code{start_vCol}, except this number indicates what the final 'V-Column'
-should be.}
+should be. The default is \verb{=4}, meaning the last 'V-Column' to be created is \code{'V4'}}
 
 \item{fl}{Numeric. Index/position of the name of the file to be processed, in the list \code{ls_aphpg}.}
 }

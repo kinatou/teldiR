@@ -105,7 +105,7 @@ view_DTif <- function(DTname, ifCol1, ifCol2=NA, nchar_thresh=-1) {
 #' therein is "1.Addr.Tables".
 #' @return An object that is both of class 'data.table' and 'data.frame'.
 #' @export 
-export_fullDT <- function(DTname="dtAPH", dirYR=NULL, xpNAME=".Ls.Adr.", csv=1, xlsx=0,
+export_fullDT <- function(DTname="dtAPH", dirYR=NULL, xpNAME="Ls.Adr", csv=1, xlsx=0,
                           xpSUBDIR="1.Addr.Tables") {
   if (is.null(dirYR)) { #default - extracts year from `DirName` variable
     dirYR <- get(DTname)[1, "DirName"] %>% gsub("^.*_(?=1[89])","", ., perl=T) %>% stringr::str_sub(1, 4)
@@ -122,7 +122,7 @@ export_fullDT <- function(DTname="dtAPH", dirYR=NULL, xpNAME=".Ls.Adr.", csv=1, 
   if (csv==1) { #exports as a .csv file
     xpDIR <- file.path("2.Intermediary", xpSUBDIR, dirYR, 
                        paste0(dirYR, ".", xpNAME, ".", xpTIME, ".csv"))
-    write.csv(get(DTname), xpDIR, row.names=FALSE)
+    data.table::fwrite(get(DTname), xpDIR, row.names=F)
     print("The processed file has been outputted as an .csv file.")
   } #N.B. exporting .xlsx file takes a while with large volumes of records
   Sys.time()

@@ -84,24 +84,24 @@ readin_PG <- function(fl){ #`fl` refers to iteration of loop in the list of all 
 #' be created? The default value is `=3`, meaning `'V3'`, since by default, columns `'V1'` and `'V2'` would
 #' have been initialised at the point of importing information from a text file using `readin_PG()`.
 #' @param end_vCol Numeric. Similar to `start_vCol`, except this number indicates what the final 'V-Column'
-#' should be.
+#' should be. The default is `=4`, meaning the last 'V-Column' to be created is `'V4'`
 #' @param fl Numeric. Index/position of the name of the file to be processed, in the list `ls_aphpg`.
 #' @return An expanded 'data.table' and 'data.frame' object with more columns to hold different types of information.
 #' @export 
-prep_pgDT <- function(DTname="pgAPH", start_vCol=3, end_vCol, fl){
+prep_pgDT <- function(DTname="pgAPH", start_vCol=3, end_vCol=4, fl){
   DT_x <- get(DTname)
   
   # creates new columns for separating strings and breaking down addresses
   for (i in start_vCol:end_vCol) { DT_x[[ eval(paste0("V", i)) ]] <- as.character( rep(NA, nrow(DT_x))) }
   
   # tests, from file name, whether pages from that year's directories comprise multiple columns
-  if (regexpr("\\_[1|2|3]\\.txt$", ls_aphpg[fl], perl=T)>0) { # if YES contains columns,
+  if (regexpr("\\_[1|2|3](\\.tif|\\.j2k)?\\.txt$", ls_aphpg[fl], perl=T)>0) { # if YES contains columns,
     # extracts, from file name: (f)ile (p)age number, (col)umn number and dir(ectory) n(a)me
-    DT_x[["OriPg"]]    <- ls_aphpg[fl] %>% sub("\\_[1|2|3]\\.txt$", "", .) %>% stringr::str_sub(., -5,-1) %>% as.numeric()
-    DT_x[["PgCol"]]    <- ls_aphpg[fl] %>% sub("\\.txt$", "", .) %>% stringr::str_sub(., -1) %>% as.numeric()
+    DT_x[["OriPg"]]    <- ls_aphpg[fl] %>% sub("\\_[1|2|3](\\.tif|\\.j2k)?\\.txt$", "", .) %>% stringr::str_sub(., -5,-1) %>% as.numeric()
+    DT_x[["PgCol"]]    <- ls_aphpg[fl] %>% sub("(\\.tif|\\.j2k)?\\.txt$", "", .) %>% stringr::str_sub(., -1) %>% as.numeric()
   } else {
-    DT_x[["OriPg"]]    <- ls_aphpg[fl] %>% sub("\\.txt$", "", .) %>% stringr::str_sub(., -1) %>% as.numeric()
-  }; DT_x[["DirName"]]  <- ls_aphpg[fl] %>% gsub("^.*/(?=bt)","", ., perl=T) %>% gsub("\\-.*$","", .) %>% as.character()
+    DT_x[["OriPg"]]    <- ls_aphpg[fl] %>% sub("(\\.tif|\\.j2k)?\\.txt$", "", .) %>% stringr::str_sub(., -5,-1) %>% as.numeric()
+  }; DT_x[["DirName"]]  <- ls_aphpg[fl] %>% gsub("^.*(?=bt_[0-9])","", ., perl=T) %>% gsub("\\-.*$","", .) %>% as.character()
   ### N.B. `stringr::str_sub()` from `stringr` package allows you to subset from the string's end
   # appends these values to the `pgAPH` data.table
   assign(DTname, DT_x, envir = .GlobalEnv)

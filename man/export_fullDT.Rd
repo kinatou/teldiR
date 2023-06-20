@@ -7,7 +7,7 @@
 export_fullDT(
   DTname = "dtAPH",
   dirYR = NULL,
-  xpNAME = ".Ls.Adr.",
+  xpNAME = "Ls.Adr",
   csv = 1,
   xlsx = 0,
   xpSUBDIR = "1.Addr.Tables"
