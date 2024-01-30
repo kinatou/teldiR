@@ -23,3 +23,4 @@ devtools::install("file-path/to-folder-of/teldiR")
 
 ## Other Notes
 Many functions in `teldiR` are equipped with default settings that reference a specific folder structure. Many of these file path references can be changed, but should it be deemed more convenient, the relevant folder structure can be seen in the [BTPhoneDirectories](https://github.com/ESRC-CDRC/BTPhoneDirectories) repository.
+# testerrR
