@@ -24,12 +24,6 @@ devtools::install("file-path/to-folder-of/teldiR")
 ```
 
 ## Other Notes
-<<<<<<< HEAD
-Many functions in `teldiR` are equipped with default settings that reference a specific folder structure. Many of these file path references can be changed, but should it be deemed more convenient, the relevant folder structure can be seen in the [BTPhoneDirectories](https://github.com/ESRC-CDRC/BTPhoneDirectories) repository.
-# testerrR
-=======
 The R package installation has documentation built-in. For every function contained in `teldiR`, you may type `?name_of_function` in the console to pull out its corresponding documentation and description of how to use it.
 
 Many functions in `teldiR` are equipped with default settings that reference a specific folder structure. Many of these file path references can be changed by specifying certain arguments, but should it be deemed more convenient, the relevant folder structure can be seen in the [BTPhoneDirectories](https://github.com/ESRC-CDRC/BTPhoneDirectories) repository.
->>>>>>> b5df26fc8eecfacd0c9325d7b40857aee36cc03e
-# teldiR
