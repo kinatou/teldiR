@@ -180,3 +180,79 @@ proofcheck_Surnames <- function(DTname="tld", DTrefName="srn", maxDist=1) {
   } # N.B. `for` > `foreach %do%` here as every iteration is changing the same single `DT_x`
   assign(DTname, DT_x, envir = parent.frame()) #returns to parent frame (`env`)
 }
+
+
+
+#' Geocoding (Fuzzy matches two string fields)
+#'
+#' N.B. This currently works with `%do%` in the package but not with `%dopar%` (which only works
+#' outside the package, if the function is loaded into global environment!)
+#' This function is used primarily for geocoding. How it exactly works is by fuzzy
+#' matching two columns/fields that each contain character strings (of address street names).
+#' 
+#' @import parallel
+#' @import doParallel
+#' @importFrom foreach foreach %do% %dopar%
+#' @param dt1 Data Table. Name of object in the global environment which corresponds
+#' to the records of addresses that are to be geocoded.
+#' @param dt2 Data Table. Name of object in the global environment which corresponds
+#' to the database of already geocoded addresses. The default used was the OS AddressBase
+#' from the Ordnance Survey.
+#' @param col1 Character. Name of field in the data table `dt1` which contains the street
+#' names of the addresses and which is to be used for geocoding.
+#' @param col2 Character. Name of field in the data table `dt2` which contains the street
+#' names of the already geocoded addresses.
+#' @param xtr1 Vector of characters. Names of additional fields of information from `dt1` (other
+#' than `col1`) which the user wishes to retain in the final output of the function.
+#' @param xtr2 Vector of characters. Names of additional fields of information from `dt2`(other
+#' than `col2`) which the user wishes to retain in the final output of the function.
+#' @return The same object in the global environment (`dt1`) with additional fields appended
+#' to it following the process of geocoding.
+#' @export
+match_strDist <- function(dt1, dt2, col1, col2, xtr1, xtr2) {
+  strWGHT <- c(d = 1, i = 1, s = 1, t = 1) #del, ins, sub, trp.
+  .GlobalEnv$col1 <- col1; .GlobalEnv$col2 <- col2
+  
+  #combines the optional arguments (xtr1,2) with required arg. (if applicable)
+  if (!is.null(xtr2)) { lst2 <- append(append(col2, xtr2), "regdist") 
+  } else {lst2 <- append(col2, "regdist")}
+  # DT1 :: Rows to be matched; creates unique row identifier column (ID) in this data.table
+  dt1[, ID := .I] #equivalent of dt1 %>% mutate(id = row_number())
+  # DT2 :: Reference data table of addresses - from OS AddressBase; Extracts variable(s) to be used
+  if (!is.null(xtr2)) { ref <- dt2[, ..lst2] } else { ref <- dt2[, ..col2]}
+  
+  
+  ### PHASE II: Geo-codes Addresses without a defined Telephone Exchange Area OR bad phase I results
+  #DT2 - no need to subset 'ref' data.table because we will use all entries
+  
+  #iterates string matching of addresses from dt1, row by row - to save memory (?)
+  foreach (i=1:nrow(dt1), .export=c("ref", "col1", "col2", "strWGHT"), 
+           .combine='rbind', .packages = c("data.table", "stringdist")) %do% {
+             #replicate the same addr. string to be matched, as many times as the address ref. database
+             mch <- rep(dt1[i, ..col1], times = nrow(ref))
+             ref$dst <- #calculates string distance (of chosen distance measure)
+               stringdist( as.character(mch), as.character(ref[[col2]]), 
+                           method="osa", weight = strWGHT) 
+             # #extracts the first row with lowest string dist., then append row ID to it
+             # row <- ref[ , .SD[which.min(dst)]][, ID := dt1$ID[i]][, mch_flag := 2]
+             
+             # subsets to keep only entries with minimum string distance; checks for matching street_num
+             ref_t <- ref[ ref[, .I[dst == min(dst)]],][, mch_flag := 20] #street-name match
+             ref_t$mch_flag[ref_t$adb_num==dt1[i, tld_num] & ref_t$dst<4] <- 21 #str. name + num match
+             #somehow #if (!is.na(dt1$tld_num[i])) doesn't work!!!!
+             row <- ref_t[ , .SD[which.max(mch_flag)]][, ID := dt1$ID[i]]
+             
+             # and finally, appends these individual rows to the `xpt` rows from Phase I
+           } -> xpt # %>% rbind(xpt, .) 
+  
+  #reassigns the mch_flag to `=99` if the address returns no matches (`NA`)
+  xpt[is.na(dst) | dst>10, mch_flag := 99]
+  
+  ### Phase Final: Export Phase
+  #defines columns to be exported: string dist. ("dst") and the original vars.
+  xcol <- append(c("dst", "mch_flag"), lst2)
+  #left join - merges on dt1, using the index 'ID' from xpt to search for rows
+  #carries over all columns defined in 'xcol' from xpt to dt1
+  dt1[xpt, on = 'ID', (xcol) := mget(paste0("i.", xcol))]
+  return(dt1)
+} 

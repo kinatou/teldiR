@@ -139,7 +139,7 @@ split_strings <- function(DTname, fromCol, toCol, Regex_str, nchar_from_front=-1
       if (extract_front_only==1) { #exception 1 - extract front of string from, but leave `fromCol` untouched
         DT_x[i, eval(toCol) := stringr::str_sub(DT_x[[fromCol]][i], 1, -(nchar_from_back - posX[i] + 3))]
       } else if (extract_back_only==1) { #exception 2 - extract back of string from
-        DT_x[i, eval(toCol) := stringr::str_sub(DT_x[[fromCol]][i], 1, -(nchar_from_back - posX[i] + 3))]
+        DT_x[i, eval(toCol) := stringr::str_sub(DT_x[[fromCol]][i], -(nchar_from_back - posX[i] + 1), -1)]
       } else { #normal circumstances - split strings
         DT_x[i, eval(toCol) := stringr::str_sub(DT_x[[fromCol]][i], -(nchar_from_back - posX[i] + 1), -1)]
         DT_x[i, eval(fromCol) := stringr::str_sub(DT_x[[fromCol]][i], 1, -(nchar_from_back - posX[i] + 3))]

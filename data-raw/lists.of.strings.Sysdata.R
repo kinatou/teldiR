@@ -33,7 +33,8 @@ lstBZNME <- dtBZNME %>% pull(., "keyword_rgx") %>% paste0(., collapse="|")
 
 # imports table of list of throughfare abbreviations and their long-forms
 dtABREV <- data.table ( #../../../
-  openxlsx::read.xlsx("1.Text.Procs/3.Post.Proc/common/0.Throughway.Names.Abbrevs.xlsx", colNames=T) )
+  openxlsx::read.xlsx("1.Text.Procs/3.Post.Proc/common/0.Throughway.Names.Abbrevs.xlsx", colNames=T) 
+  )[, c("full_name", "abbrev_rgx")]
 
 #strings vector elements together into list
 lstABRV <- dtABREV %>% pull(., "abbrev_rgx") %>% paste0(., collapse="|")

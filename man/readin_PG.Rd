@@ -4,11 +4,16 @@
 \alias{readin_PG}
 \title{Imports Text from a Single Text File}
 \usage{
-readin_PG(fl)
+readin_PG(fl, sep = "+")
 }
 \arguments{
 \item{fl}{Numeric. Index or position of the name of file to be imported, in the object
 \code{ls_aphpg} that was created using the function \code{gen_fileLST()}.}
+
+\item{sep}{Character. Single-byte character that is treated as the marker of separation
+of fields within a single line (row). The default value is \code{"+"} which is assumed
+to be a character that will not appear in any of the input text files, and this is
+desired so that there will not yet be any separation of information into fields in the output.}
 }
 \value{
 A table of two columns, containing information from a single .txt OCR output file.

@@ -59,14 +59,18 @@ gen_fileLST <- function(dirYR, rootDR="0.In.Archives/4.Out.Text", pgTYP="Subscri
 #' @importFrom data.table ":="
 #' @param fl Numeric. Index or position of the name of file to be imported, in the object
 #' `ls_aphpg` that was created using the function `gen_fileLST()`.
+#' @param sep Character. Single-byte character that is treated as the marker of separation
+#' of fields within a single line (row). The default value is `"+"` which is assumed
+#' to be a character that will not appear in any of the input text files, and this is
+#' desired so that there will not yet be any separation of information into fields in the output.
 #' @return A table of two columns, containing information from a single .txt OCR output file.
 #' @export 
-readin_PG <- function(fl){ #`fl` refers to iteration of loop in the list of all pages
+readin_PG <- function(fl, sep="+"){ #`fl` refers to iteration of loop in the list of all pages
   pgAPH         <<- data.table::as.data.table(
     read.table( file = as.character(ls_aphpg[fl]), header=F, blank.lines.skip=T,
                 #delinates columns by '|'; strips white space around separator;
                 #fills in blanks with implicit rows (assuming rows of unequal length)
-                sep = "+", strip.white=T, fill=T, col.names = c('V1', 'V2'), quote="",
+                sep = sep, strip.white=T, fill=T, col.names = c('V1', 'V2'), quote="",
                 stringsAsFactors=F #prevents strings from being read as factors
     )) %>% dplyr::select(V1) %>% .[, V2 := V1] #duplicates V1; keeps V1 as original string
 } # N.B. using data.table syntax (rather than dplyr) to clone V1 as V2 was crucial to create a "deep copy"!
@@ -95,13 +99,13 @@ prep_pgDT <- function(DTname="pgAPH", start_vCol=3, end_vCol=4, fl){
   for (i in start_vCol:end_vCol) { DT_x[[ eval(paste0("V", i)) ]] <- as.character( rep(NA, nrow(DT_x))) }
   
   # tests, from file name, whether pages from that year's directories comprise multiple columns
-  if (regexpr("\\_[1|2|3](\\.tif|\\.j2k)?\\.txt$", ls_aphpg[fl], perl=T)>0) { # if YES contains columns,
+  if (regexpr("\\_[1|2|3]\\.?(tif|j2k|png)?\\.txt$", ls_aphpg[fl], perl=T)>0) { # if YES contains columns,
     # extracts, from file name: (f)ile (p)age number, (col)umn number and dir(ectory) n(a)me
-    DT_x[["OriPg"]]    <- ls_aphpg[fl] %>% sub("\\_[1|2|3](\\.tif|\\.j2k)?\\.txt$", "", .) %>% stringr::str_sub(., -5,-1) %>% as.numeric()
-    DT_x[["PgCol"]]    <- ls_aphpg[fl] %>% sub("(\\.tif|\\.j2k)?\\.txt$", "", .) %>% stringr::str_sub(., -1) %>% as.numeric()
+    DT_x[["OriPg"]]    <- ls_aphpg[fl] %>% sub("\\_[1|2|3]\\.?(tif|j2k|png)?\\.txt$", "", .) %>% stringr::str_sub(., -5,-1) %>% as.numeric()
+    DT_x[["PgCol"]]    <- ls_aphpg[fl] %>% sub("\\.?(tif|j2k|png)?\\.txt$", "", .) %>% stringr::str_sub(., -1) %>% as.numeric()
   } else {
-    DT_x[["OriPg"]]    <- ls_aphpg[fl] %>% sub("(\\.tif|\\.j2k)?\\.txt$", "", .) %>% stringr::str_sub(., -5,-1) %>% as.numeric()
-  }; DT_x[["DirName"]]  <- ls_aphpg[fl] %>% gsub("^.*(?=bt_[0-9])","", ., perl=T) %>% gsub("\\-.*$","", .) %>% as.character()
+    DT_x[["OriPg"]]    <- ls_aphpg[fl] %>% sub("\\.?(tif|j2k|png)?\\.txt$", "", .) %>% stringr::str_sub(., -5,-1) %>% as.numeric()
+  }; DT_x[["DirName"]]  <- ls_aphpg[fl] %>% gsub("^.*(?=bt_[0-9])","", ., perl=T) %>% gsub("\\-\\d{2,}.*(\\.txt)?$","", .) %>% as.character()
   ### N.B. `stringr::str_sub()` from `stringr` package allows you to subset from the string's end
   # appends these values to the `pgAPH` data.table
   assign(DTname, DT_x, envir = .GlobalEnv)

@@ -17,12 +17,19 @@
 #' @return An object that is both of class 'data.table' and 'data.frame'.
 #' @export 
 readin_adrDT <- function(FLname, IMPORTname="tld", sub_rows=-1, xpSUBDIR="1.Addr.Tables") {
-  
+  #N.B. `FLname` can be the full file name, with/-out file extension, or a short
+  #form. The function will adapt and do a `Ctrl+F` if the `FLname` is short
   #reads in data from file path
   if (substr(FLname, 1, 14)=="2.Intermediary") { # , if already specified in full
     DT_x <- data.table::fread(FLname, data.table=TRUE)
   } else { #otherwise, constructs file path to that file using defaults
-    fp_x <- file.path("2.Intermediary", xpSUBDIR, stringr::str_sub(FLname, 1, 4), FLname)
+    fp_x <- file.path("2.Intermediary", xpSUBDIR, stringr::str_sub(FLname, 1, 4))
+    
+    if (nchar(FLname)<=10 | regexpr("\\d", FLname)<0) { #fills in incomplete file names
+      list.files(fp_x)[which(regexpr(FLname, list.files(fp_x)) > 0)] %>%
+        tail(., n=1) -> FLname # if >1 file matched, take chronologically latest
+    } #appends file name in full to the file path
+    fp_x <- file.path(fp_x, FLname)
     
     if (stringr::str_sub(FLname, -3, -1)=="csv") { #read in .csv files as such
       DT_x <- data.table::fread(fp_x, data.table=TRUE)
